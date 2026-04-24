@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Perkiraan Pertemanan</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+    :root {
+        --bg1: #0f172a;
+        --bg2: #1e293b;
+        --card: rgba(255,255,255,0.08);
+        --line: rgba(255,255,255,0.16);
+        --text: #e2e8f0;
+        --muted: rgba(226,232,240,0.72);
+        --bubble: rgba(20, 26, 40, 0.92);
+        --bubbleBorder: rgba(255,255,255,0.12);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--bg1), var(--bg2));
+        color: var(--text);
+        font-family: Arial, sans-serif;
+        overflow-x: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 12px;
+    }
+
+    .box {
+        width: min(980px, 100%);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    .judul {
+        text-align: center;
+        margin-bottom: 16px;
+    }
+
+    .judul h1 {
+        margin: 0;
+        font-size: clamp(20px, 4vw, 32px);
+        line-height: 1.2;
+    }
+
+    .judul p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .kontrol {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        margin: 16px 0 18px;
+    }
+
+    .kontrol select,
+    .kontrol input[type="date"] {
+        width: 100%;
+        appearance: none;
+        -webkit-appearance: none;
+        background: rgba(255,255,255,0.08);
+        color: var(--text);
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 14px;
+        padding: 12px 14px;
+        outline: none;
+        font-size: 15px;
+    }
+
+    .kontrol input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        opacity: 0.85;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 12px;
+    }
+
+    .unit,
+    .total-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        padding: 14px 12px;
+        text-align: center;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    .value {
+        font-size: clamp(20px, 2.6vw, 28px);
+        font-weight: 700;
+        line-height: 1.1;
+        min-height: 1.2em;
+        display: inline-block;
+        will-change: transform, opacity;
+        transform-origin: center;
+    }
+
+    .flip {
+        animation: flipText 240ms ease;
+    }
+
+    @keyframes flipText {
+        0%   { transform: perspective(700px) rotateX(0deg) translateY(0); opacity: 1; }
+        45%  { transform: perspective(700px) rotateX(-90deg) translateY(-2px); opacity: 0; }
+        55%  { transform: perspective(700px) rotateX(90deg) translateY(2px); opacity: 0; }
+        100% { transform: perspective(700px) rotateX(0deg) translateY(0); opacity: 1; }
+    }
+
+    .section {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+    }
+
+    .section h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+    }
+
+    .total-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        gap: 12px;
+    }
+
+    .kata-bawah {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 14px;
+        color: rgba(226,232,240,0.85);
+        line-height: 1.4;
+    }
+
+    .pesan-bubble {
+        position: fixed;
+        left: 50%;
+        top: 18px;
+        transform: translateX(-50%) translateY(-18px);
+        width: min(92vw, 420px);
+        background: var(--bubble);
+        border: 1px solid var(--bubbleBorder);
+        border-radius: 22px;
+        padding: 14px 16px;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .35s ease, transform .35s ease;
+        z-index: 9999;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .pesan-bubble.tampil {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .ikon-bubble {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.08);
+        flex: 0 0 auto;
+        font-size: 18px;
+    }
+
+    .isi-bubble {
+        min-width: 0;
+    }
+
+    .isi-bubble .judul-bubble {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .isi-bubble .teks-bubble {
+        font-size: 13px;
+        color: rgba(226,232,240,0.78);
+        line-height: 1.35;
+    }
+
+    @media (max-width: 640px) {
+        body {
+            padding: 8px;
+            align-items: flex-end;
+        }
+
+        .box {
+            width: 100%;
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .kontrol {
+            grid-template-columns: 1fr;
+        }
+
+        .pesan-bubble {
+            width: calc(100vw - 16px);
+            top: 10px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="pesan-bubble" id="pesanBubble">
+    <div class="ikon-bubble"><i class="fa-solid fa-comment-dots"></i></div>
+    <div class="isi-bubble">
+        <div class="judul-bubble">Pertemanan dibuka</div>
+        <div class="teks-bubble">Tanggal bisa diganti sementara tanpa disimpan.</div>
+    </div>
+</div>
+
+<div class="box">
+    <div class="judul">
+        <h1>Perkiraan kita berteman sejak 1 Juli 2024</h1>
+        <p>Waktu terus jalan, angka ikut berubah pelan-pelan</p>
+    </div>
+
+    <div class="kontrol">
+        <select id="pilihTanggal">
+            <option value="2024-07-01">1 Juli 2024</option>
+            <option value="2024-06-01">1 Juni 2024</option>
+            <option value="custom">Custom</option>
+        </select>
+
+        <input type="date" id="tanggalCustom" style="display:none;">
+    </div>
+
+    <div class="grid">
+        <div class="unit"><span class="label">Tahun</span><div class="value" id="tDetailTahun">0</div></div>
+        <div class="unit"><span class="label">Bulan</span><div class="value" id="tDetailBulan">0</div></div>
+        <div class="unit"><span class="label">Minggu</span><div class="value" id="tDetailMinggu">0</div></div>
+        <div class="unit"><span class="label">Hari</span><div class="value" id="tDetailHari">0</div></div>
+        <div class="unit"><span class="label">Jam</span><div class="value" id="tDetailJam">0</div></div>
+        <div class="unit"><span class="label">Menit</span><div class="value" id="tDetailMenit">0</div></div>
+        <div class="unit"><span class="label">Detik</span><div class="value" id="tDetailDetik">0</div></div>
+        <div class="unit"><span class="label">Milidetik</span><div class="value" id="tDetailMs">0</div></div>
+    </div>
+
+    <div class="section">
+        <h2>Kalkulasi mandiri</h2>
+        <div class="total-grid">
+            <div class="total-card"><span class="label">Total Tahun</span><div class="value" id="tTotalTahun">0</div></div>
+            <div class="total-card"><span class="label">Total Bulan</span><div class="value" id="tTotalBulan">0</div></div>
+            <div class="total-card"><span class="label">Total Minggu</span><div class="value" id="tTotalMinggu">0</div></div>
+            <div class="total-card"><span class="label">Total Hari</span><div class="value" id="tTotalHari">0</div></div>
+            <div class="total-card"><span class="label">Total Jam</span><div class="value" id="tTotalJam">0</div></div>
+            <div class="total-card"><span class="label">Total Menit</span><div class="value" id="tTotalMenit">0</div></div>
+            <div class="total-card"><span class="label">Total Detik</span><div class="value" id="tTotalDetik">0</div></div>
+            <div class="total-card"><span class="label">Total Milidetik</span><div class="value" id="tTotalMs">0</div></div>
+        </div>
+    </div>
+
+    <div class="kata-bawah">apapun yang terjadi jangan sampai lost kontak yah :)</div>
+</div>
+
+<script>
+    const elemen = {
+        pilihTanggal: document.getElementById("pilihTanggal"),
+        tanggalCustom: document.getElementById("tanggalCustom"),
+        pesanBubble: document.getElementById("pesanBubble"),
+
+        tDetailTahun: document.getElementById("tDetailTahun"),
+        tDetailBulan: document.getElementById("tDetailBulan"),
+        tDetailMinggu: document.getElementById("tDetailMinggu"),
+        tDetailHari: document.getElementById("tDetailHari"),
+        tDetailJam: document.getElementById("tDetailJam"),
+        tDetailMenit: document.getElementById("tDetailMenit"),
+        tDetailDetik: document.getElementById("tDetailDetik"),
+        tDetailMs: document.getElementById("tDetailMs"),
+
+        tTotalTahun: document.getElementById("tTotalTahun"),
+        tTotalBulan: document.getElementById("tTotalBulan"),
+        tTotalMinggu: document.getElementById("tTotalMinggu"),
+        tTotalHari: document.getElementById("tTotalHari"),
+        tTotalJam: document.getElementById("tTotalJam"),
+        tTotalMenit: document.getElementById("tTotalMenit"),
+        tTotalDetik: document.getElementById("tTotalDetik"),
+        tTotalMs: document.getElementById("tTotalMs"),
+    };
+
+    const nilaiLama = {};
+    let mulai = new Date("2024-07-01T00:00:00");
+    let bubbleTimeout = null;
+
+    function animasiFlip(el, nilaiBaru, key) {
+        if (nilaiLama[key] === nilaiBaru) return;
+        nilaiLama[key] = nilaiBaru;
+        el.classList.remove("flip");
+        void el.offsetWidth;
+        el.textContent = nilaiBaru;
+        el.classList.add("flip");
+    }
+
+    function tampilkanBubble() {
+        elemen.pesanBubble.classList.add("tampil");
+        clearTimeout(bubbleTimeout);
+        bubbleTimeout = setTimeout(() => {
+            elemen.pesanBubble.classList.remove("tampil");
+        }, 5000);
+    }
+
+    function ambilTanggalMulai() {
+        if (elemen.pilihTanggal.value === "custom") {
+            if (!elemen.tanggalCustom.value) return new Date("2024-07-01T00:00:00");
+            return new Date(elemen.tanggalCustom.value + "T00:00:00");
+        }
+        return new Date(elemen.pilihTanggal.value + "T00:00:00");
+    }
+
+    function updateWaktu() {
+        mulai = ambilTanggalMulai();
+
+        const sekarang = new Date();
+        let selisih = sekarang - mulai;
+        if (selisih < 0) selisih = 0;
+
+        const totalMilidetik = selisih;
+        const totalDetik = Math.floor(totalMilidetik / 1000);
+        const totalMenit = Math.floor(totalDetik / 60);
+        const totalJam = Math.floor(totalMenit / 60);
+        const totalHari = Math.floor(totalJam / 24);
+
+        const totalTahun = Math.floor(totalHari / 365);
+        const sisaSetelahTahun = totalHari % 365;
+
+        const totalBulan = Math.floor(sisaSetelahTahun / 30);
+        const sisaSetelahBulan = sisaSetelahTahun % 30;
+
+        const totalMinggu = Math.floor(sisaSetelahBulan / 7);
+        const hariDetail = sisaSetelahBulan % 7;
+
+        const jam = totalJam % 24;
+        const menit = totalMenit % 60;
+        const detik = totalDetik % 60;
+        const milidetik = totalMilidetik % 1000;
+
+        animasiFlip(elemen.tDetailTahun, totalTahun, "d_tahun");
+        animasiFlip(elemen.tDetailBulan, totalBulan, "d_bulan");
+        animasiFlip(elemen.tDetailMinggu, totalMinggu, "d_minggu");
+        animasiFlip(elemen.tDetailHari, hariDetail, "d_hari");
+        animasiFlip(elemen.tDetailJam, jam, "d_jam");
+        animasiFlip(elemen.tDetailMenit, menit, "d_menit");
+        animasiFlip(elemen.tDetailDetik, detik, "d_detik");
+        animasiFlip(elemen.tDetailMs, milidetik, "d_ms");
+
+        animasiFlip(elemen.tTotalTahun, totalTahun, "t_tahun");
+        animasiFlip(elemen.tTotalBulan, totalBulan, "t_bulan");
+        animasiFlip(elemen.tTotalMinggu, totalMinggu, "t_minggu");
+        animasiFlip(elemen.tTotalHari, totalHari, "t_hari");
+        animasiFlip(elemen.tTotalJam, totalJam, "t_jam");
+        animasiFlip(elemen.tTotalMenit, totalMenit, "t_menit");
+        animasiFlip(elemen.tTotalDetik, totalDetik, "t_detik");
+        animasiFlip(elemen.tTotalMs, totalMilidetik, "t_ms");
+    }
+
+    elemen.pilihTanggal.addEventListener("change", () => {
+        if (elemen.pilihTanggal.value === "custom") {
+            elemen.tanggalCustom.style.display = "block";
+            if (!elemen.tanggalCustom.value) {
+                elemen.tanggalCustom.value = "2024-07-01";
+            }
+        } else {
+            elemen.tanggalCustom.style.display = "none";
+        }
+        updateWaktu();
+    });
+
+    elemen.tanggalCustom.addEventListener("change", updateWaktu);
+
+    tampilkanBubble();
+    updateWaktu();
+    setInterval(updateWaktu, 20);
+</script>
+
+</body>
+</html>
